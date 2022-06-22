@@ -3,18 +3,30 @@ list.of.packages <- c("vtable","dplyr","ggplot","reshape","sjPlot","caret","ROCR
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
+install.packages("devtools")
+devtools::install_github("dandls/counterfactuals")
+devtools::install_github("MI2DataLab/randomForestExplainer")
+
+
+# data handling libraries.
 library(vtable)
-library(dplyr)
-library(ggplot)
+
+# graphical libraries.
+library(ggplot2)
 library(reshape)
 library(sjPlot)
+
+# data science libraries.
 library(caret)
 library(ROCR)
 library(randomForest)
 library(tree)
 
+# others.
+library(dplyr)
+
 # ------------------------------------- Load Data
-german_credit <- read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data")
+german_credit <- read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data-numeric")
 german_credit
 
 colnames(german_credit) <- c("chk_acct", "duration", "credit_his", "purpose", 
@@ -83,6 +95,21 @@ cm_rf <- confusionMatrix(data=rf_predicted_test, reference=test$response)
 accuracy_tree <- round(cm_rf$overall[1],2)
 accuracy_tree
 
+german_credit <- read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data-numeric")
+colnames(german_credit)<- c("Creditability","AccountBalance","DurOfCreMon","PayStatPrevCre","Purpose","CreAm","ValSavSto","LenCurEmp","InstaPerCen","MarStat","Guarantors","DurCurAd","MostValAss","Age","ConcurCre","TypOfApp","NoCreBa","Occuptation","NoOfDep","Telephone","FoRWor")
+
+library("DALEX")
+library("ranger")
+library("modelStudio")
+
+# create an explainer for the model    
+explainer <- explain(m3,
+                     data = train,
+                     y = train$response,
+                     label = "Random Forest")
+
+# make a studio for the model
+modelStudio(explainer)
 # ------------------------------------- Modelling: Tree
 m4 <- tree(response ~ ., data=train, method="class")
 summary(m4)
